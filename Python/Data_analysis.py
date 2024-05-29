@@ -1,9 +1,9 @@
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as pyplot
+import matplotlib.pyplot as plt
 import data_functions as data 
 
-df = pd.read_csv("May_26_09-16.csv",header = None,skiprows = 1)
+df = pd.read_csv("May_29_11-50.csv",header = None,skiprows = 1)
 acc_data = df.to_numpy()
 t, a_x, a_y, a_z, a_mag = acc_data.T
 t = np.insert(t,0,0) 
@@ -40,14 +40,32 @@ A_x = np.fft.fft(a_x_new)
 A_y = np.fft.fft(a_y_new)
 A_z = np.fft.fft(a_z_new)
 
-index_array = np.arange(len(A_x))
+# freq_x = np.fft.fftfreq(len(A_x), data.SamplingTime(t))
+# magnitude = np.abs(A_x)
+# plt.plot(freq_x,magnitude)
+# plt.savefig('Accn_fft')
+
+# plt.plot(t_new, A_x)
+# plt.grid(True)
+# plt.xlabel('t')
+# plt.ylabel('x')
+# plt.savefig('axNew_vs_Time')
+# plt.clf()
+
+index_array = np.fft.fftfreq(len(A_x), data.SamplingTime(t))
 squared = np.where(index_array == 0, 1, index_array ** 2)
 
 X = A_x/squared
 Y = A_y/squared
 Z = A_z/squared
 
-mul = -1*(len(A_x)**2)/(4*np.pi*np.pi)
+# freq_x = np.fft.fftfreq(len(X), data.SamplingTime(t))
+# magnitude = np.abs(X)
+# plt.plot(freq_x,magnitude)
+# plt.savefig('Displacement_fft')
+
+# mul = -1*(len(A_x)**2)/(4*np.pi*np.pi)
+
 
 # x_trial = np.fft.ifft(A_x)
 # y_trial = np.fft.ifft(A_y)
@@ -62,16 +80,36 @@ x = np.fft.ifft(X)
 y = np.fft.ifft(Y)
 z = np.fft.ifft(Z)
 
+
 displacement_data = np.column_stack((t_new,x,y,z))
 np.savetxt("Displacement.txt",displacement_data, fmt = "%f", delimiter = " ")
 
+# displacement_before_ifft_data = np.column_stack((t_new,trial1, trial2, trial3))
+# np.savetxt("FFT_of_Displacement.txt", displacement_before_ifft_data, fmt = "%f", delimiter = " ")
 
+# original_displacement_before_ifft = np.column_stack((t_new,X,Y,Z))
+# np.savetxt("FFT_of_displacement-original.txt", original_displacement_before_ifft, fmt = "%f", delimiter = " ")
 
+plt.plot(t_new, x)
+plt.grid(True)
+plt.xlabel('t')
+plt.ylabel('x')
+plt.savefig('x_vs_Time')
+plt.clf()
 
+plt.plot(t_new, y)
+plt.grid(True)
+plt.xlabel('t')
+plt.ylabel('y')
+plt.savefig('y_vs_Time')
+plt.clf()
 
-
-
-
+plt.plot(t_new, x)
+plt.grid(True)
+plt.xlabel('t')
+plt.ylabel('z')
+plt.savefig('z_vs_Time')
+plt.clf()
 
 
 
