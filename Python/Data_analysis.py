@@ -2,8 +2,9 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import data_functions as data 
+from vpython import *
 
-df = pd.read_csv("May_29_11-50.csv",header = None,skiprows = 1)
+df = pd.read_csv("May_29_12-09.csv",header = None,skiprows = 1)
 acc_data = df.to_numpy()
 t, a_x, a_y, a_z, a_mag = acc_data.T
 t = np.insert(t,0,0) 
@@ -113,7 +114,10 @@ plt.clf()
 
 
 
-
+phone = sphere(pos = vector(0,0,0), radius = 5, color = color.yellow, make_trail = True)
+for i in range(len(t_new)):
+    rate(500)
+    phone.pos = vector(y[i],z[i],x[i])
 
 
 
