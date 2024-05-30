@@ -80,7 +80,7 @@ void write_to_csv(const vector<double>& t,const vector<double>& x, const vector<
 
 
 int main() {
-    ifstream file("May_28_15-30.csv");
+    ifstream file("May_29_11-50.csv");
     if (!file.is_open()) {
         cerr << "Failed to open the file." << endl;
         return 1;
@@ -101,15 +101,18 @@ int main() {
     }
     file.close();
     double sampling_time = SamplingTime(t);
-
+    //write_to_csv(t,a_x,a_y,a_z,"Checking.csv");
     vector<double> a_x_new = linear_interpolation(a_x, t, sampling_time);
     vector<double> a_y_new = linear_interpolation(a_y, t, sampling_time);
     vector<double> a_z_new = linear_interpolation(a_z,t,sampling_time);
     vector<double> t_new = uniform_samples(t,sampling_time);
 
-    cout << a_x_new.size() << endl;
-    cout << a_y_new.size() << endl;
-    cout << a_z_new.size() << endl;
+    pair trimmed_array = trim_time_array(t,t_new);
+    t_new = trimmed_array.second;
+    int idx_to_trim = trimmed_array.first;
 
-    return 0;
+    a_x_new.erase(a_x_new.begin(),a_x_new.begin() + idx_to_trim);
+    a_y_new.erase(a_y_new.begin(), a_y_new.begin() + idx_to_trim);
+    a_z_new.erase(a_z_new.begin(), a_z_new.begin() + idx_to_trim);
+    write_to_csv(t_new, a_x_new, a_y_new, a_z_new,"New_Accn_Data.csv");
 }
