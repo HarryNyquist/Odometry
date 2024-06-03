@@ -80,7 +80,7 @@ void write_to_csv(const vector<double>& t,const vector<double>& x, const vector<
 
 
 int main() {
-    ifstream file("May_29_11-50.csv");
+    ifstream file("To_send.csv");
     if (!file.is_open()) {
         cerr << "Failed to open the file." << endl;
         return 1;

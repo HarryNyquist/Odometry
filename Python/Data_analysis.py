@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import data_functions as data 
+#import data_functions as data 
 from vpython import *
 
 df = pd.read_csv("New_Accn_Data.csv",header = None,skiprows = 1)
@@ -14,6 +14,17 @@ A_z = np.fft.fft(a_z_new)
 index_array = np.fft.fftfreq(len(A_x), t_new[1] - t_new[0])
 squared = np.where(index_array == 0, 1, index_array ** 2)
 
+J_x = A_x * index_array * (0+1j)
+J_y = A_y * index_array * (0+1j)
+J_z = A_z * index_array * (0+1j)
+
+j_x = np.fft.ifft(J_x)
+j_y = np.fft.ifft(J_y)
+j_z = np.fft.ifft(J_z)
+
+Jerk_data = np.column_stack((t_new,j_x,j_y,j_z))
+np.savetxt("Jerk_data.csv", Jerk_data, fmt = "%f", delimiter = ",")
+
 X = A_x/squared
 Y = A_y/squared
 Z = A_z/squared
@@ -22,9 +33,6 @@ x = np.fft.ifft(X)
 y = np.fft.ifft(Y)
 z = np.fft.ifft(Z)
 
-
-displacement_data = np.column_stack((t_new,x,y,z))
-np.savetxt("Displacement.txt",displacement_data, fmt = "%f", delimiter = " ")
 
 plt.plot(t_new, x)
 plt.grid(True)
@@ -55,7 +63,8 @@ for i in range(len(t_new)):
     phone.pos = vector(z[i],x[i],y[i])
 
 
-
+#displacement_data = np.column_stack((t_new,x,y,z))
+# np.savetxt("Displacement.txt",displacement_data, fmt = "%f", delimiter = " ")
 
 # displacement_before_ifft_data = np.column_stack((t_new,trial1, trial2, trial3))
 # np.savetxt("FFT_of_Displacement.txt", displacement_before_ifft_data, fmt = "%f", delimiter = " ")
