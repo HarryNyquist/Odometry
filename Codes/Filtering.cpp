@@ -49,37 +49,46 @@ Matrix scalarMatrixMultiplication(const Matrix&mat, double scalar){
 }
 
 class KalmanFilter{ //Do remember that this is NOT a multipurpose class, all matrix dimensions are adjusted for this particular example.
+    //We'll consider a model where jerk is constant.
     public:
     Matrix X_prev;
     Matrix P_prev; 
-    Matrix X;
-    Matrix P;
+    // Matrix X;
+    // Matrix P;
     Matrix X_pred;
-    Matrix u_k;
-    Matrix A;
-    Matrix B;
-    Matrix C;
+    Matrix P_pred;
     Matrix w_k;
+    Matrix A;
+    Matrix A_transpose;
+    //Matrix B;
+    //Matrix C;
     Matrix Q;
     Matrix KalmanGain;
     Matrix Y_k;
+    Matrix z_k;
     Matrix R;
 
+    Matrix I;
+
     KalmanFilter(Matrix X_0, Matrix P_0, double sampling_time, double acc_error, double jerk_error) :
-        X_prev(1, vector<double>(2)),
+        X_prev(2, vector<double>(1)),
         P_prev(2, vector<double>(2)),
-        X(1, vector<double>(2)),
-        P(2, vector<double>(2)),
-        X_pred(1, vector<double>(2)),
-        u_k(1, vector<double>(1)),
+        // X(2,vector<double>(1)),
+        // P(2, vector<double>(2)),
+        X_pred(2,vector<double>(1)),
+        P_pred(1,vector<double>(2)),
+        w_k(1, vector<double>(1)),
         A(2, vector<double>(2)),
-        B(2, vector<double>(2)),
-        C{ {1, 0}, {0, 1} },
-        w_k(1, vector<double>(2)),
+        A_transpose(2,vector<double>(2))
+        //B(2, vector<double>(2)),
+        //C{ {1, 0}, {0, 1} },
+        w_k(2,vector<double>(1)),
         Q(2, vector<double>(2)),
         KalmanGain(2, vector<double>(2)),
-        Y_k(1, vector<double>(2)),
+        Y_k(2,vector<double>(1)),
+        z_k(2,vector<double>(1)),
         R(2, vector<double>(2))
+        I{{1, 0},{0 , 1}}
     {
         X_prev = X_0;
         P_prev = P_0;
@@ -87,21 +96,50 @@ class KalmanFilter{ //Do remember that this is NOT a multipurpose class, all mat
             {1, sampling_time},
             {0, 1}
         };
-        B = {
-            {0.5 * sampling_time * sampling_time},
-            {sampling_time}
-        };
+        // B = {
+        //     {0.5 * sampling_time * sampling_time},
+        //     {sampling_time}
+        // };
         R = {
             {acc_error * acc_error, 0},
             {0, jerk_error * jerk_error}
         };
+        A_transpose = {
+            {1 , 0},
+            {sampling_time, 1}
+        };
     }
 
-    void Prediction(Matrix X_prev,Matrix P_prev,double u_k_fill){
-            u_k[0][0] = u_k_fill;
+    void Prediction_Xp(){
             Matrix AX = matrixMultiplication(A,X_prev);
-            Matrix Bu_k = matrixMultiplication(B,u_k);
+            //Matrix Bu_k = matrixMultiplication(B,u_k);
+            //Matrix temp_result = matrixAddition(AX,Bu_k);
+            X_pred = matrixAddition(AX, w_k);
     }
+    void Prediction_Pp(){
+            Matrix AP = matrixMultiplication(A,P_prev);
+            Matrix temp_res = matrixMultiplication(AP,A_transpose);
+            P_pred = matrixAddition(temp_res, Q);
+            P_pred[0][1] = 0;
+            P_pred[1][0] = 0;
+    }
+    void KalmanGaincalcu(){
+            KalmanGain[0][1] = 0;
+            KalmanGain[1][0] = 0;
+            Matrix PR = matrixAddition(P_pred, R);
+            KalmanGain[0][0] = P_pred[0][0]/PR[0][0];
+            KalmanGain[1][1] = P_pred[0][0]/PR[0][0];
+    }
+    void X_prev_calcu(){
+        Matrix Y = Y_k + z_k;
+        Matrix negX_k = scalarMatrixMultiplication(X_prev, -1);
+        Matrix temp_res = matrixMultiplication(KalmanGain, matrixAddition(Y,negX_k));
+        X_prev = matrixAddition(X_pred,temp_res);
+    }
+    void P_prev_calcu(){
+        Matrix negKG = scalarMatrixMultiplication(KalmanGain, -1);
+        P_prev = matrixMultiplication(matrixAddition(I, negKG),P_pred);    
+        }
 };
 
 vector<string> split(const string& s, char delimiter) {
@@ -160,18 +198,18 @@ int main(){
     }
     file.close();
 
-    vector<double> jerk_x = sym_diff(a_x, t);
-    vector<double> jerk_y = sym_diff(a_y,t);
-    vector<double> jerk_z = sym_diff(a_z,t);
-    t.erase(t.begin());
+    // vector<double> jerk_x = sym_diff(a_x, t);
+    // vector<double> jerk_y = sym_diff(a_y,t);
+    // vector<double> jerk_z = sym_diff(a_z,t);
+    // t.erase(t.begin());
 
-    write_to_csv(t,jerk_x,jerk_y,jerk_z,"Differentiated_output.csv");
+    // write_to_csv(t,jerk_x,jerk_y,jerk_z,"Differentiated_output.csv");
 
-    vector<double> jderiv_x = sym_diff(jerk_x, t);
-    vector<double> jderiv_y = sym_diff(jerk_y,t);
-    vector<double> jderiv_z = sym_diff(jerk_z,t);
-    t.erase(t.begin());
+    // vector<double> jderiv_x = sym_diff(jerk_x, t);
+    // vector<double> jderiv_y = sym_diff(jerk_y,t);
+    // vector<double> jderiv_z = sym_diff(jerk_z,t);
+    // t.erase(t.begin());
 
-    write_to_csv(t,jderiv_x,jderiv_y,jderiv_z,"jerk_Differentiation.csv");
+    // write_to_csv(t,jderiv_x,jderiv_y,jderiv_z,"jerk_Differentiation.csv");
     
 }

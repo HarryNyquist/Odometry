@@ -4,9 +4,10 @@ import matplotlib.pyplot as plt
 #import data_functions as data 
 from vpython import *
 
-df = pd.read_csv("New_Accn_Data.csv",header = None,skiprows = 1)
+df = pd.read_csv("Filtered_Accn.csv",header = None,skiprows = 1)
 acc_data = df.to_numpy()
 t_new, a_x_new, a_y_new, a_z_new= acc_data.T
+
 A_x = np.fft.fft(a_x_new)
 A_y = np.fft.fft(a_y_new)
 A_z = np.fft.fft(a_z_new)
@@ -14,24 +15,19 @@ A_z = np.fft.fft(a_z_new)
 index_array = np.fft.fftfreq(len(A_x), t_new[1] - t_new[0])
 squared = np.where(index_array == 0, 1, index_array ** 2)
 
-J_x = A_x * index_array * (0+1j)
-J_y = A_y * index_array * (0+1j)
-J_z = A_z * index_array * (0+1j)
-
-j_x = np.fft.ifft(J_x)
-j_y = np.fft.ifft(J_y)
-j_z = np.fft.ifft(J_z)
-
-Jerk_data = np.column_stack((t_new,j_x,j_y,j_z))
-np.savetxt("Jerk_data.csv", Jerk_data, fmt = "%f", delimiter = ",")
-
-X = A_x/squared
-Y = A_y/squared
-Z = A_z/squared
+X = A_x/squared * (-1)
+Y = A_y/squared * (-1)
+Z = A_z/squared * (-1)
 
 x = np.fft.ifft(X)
 y = np.fft.ifft(Y)
 z = np.fft.ifft(Z)
+
+N = len(x)
+
+x = x*N*N
+y = y*N*N
+z = z*N*N
 
 
 plt.plot(t_new, x)
@@ -168,3 +164,25 @@ for i in range(len(t_new)):
 # X = A_x / mul_array 
 # Y = A_y / mul_array 
 # Z = A_z / mul_array 
+
+# J_x = A_x * index_array * (0+1j)
+# J_y = A_y * index_array * (0+1j)
+# J_z = A_z * index_array * (0+1j)
+
+# j_x = np.fft.ifft(J_x)
+# j_y = np.fft.ifft(J_y)
+# j_z = np.fft.ifft(J_z)
+
+# Jerk_data = np.column_stack((t_new,j_x,j_y,j_z))
+# np.savetxt("Jerk_data.csv", Jerk_data, fmt = "%f", delimiter = ",")
+
+# J_deriv_x = J_x * index_array * (0+1j) 
+# J_deriv_y = J_y * index_array * (0+1j)
+# J_deriv_z = J_z * index_array * (0+1j)
+
+# j_deriv_x = np.fft.ifft(J_deriv_x)
+# j_deriv_y = np.fft.ifft(J_deriv_y)
+# J_deriv_z = np.fft.ifft(J_deriv_z)
+
+# Jerk_deriv_data = np.column_stack((t_new, j_x, j_y,j_z))
+# np.savetxt("Jerk_derivative.csv", Jerk_deriv_data, fmt = "%f" , delimiter = ",")
