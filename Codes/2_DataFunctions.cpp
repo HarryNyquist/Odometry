@@ -80,7 +80,7 @@ void write_to_csv(const vector<double>& t,const vector<double>& x, const vector<
 
 
 int main() {
-    ifstream file("Three_June_14-36.csv");
+    ifstream file("Filtered_Accn.csv");
     if (!file.is_open()) {
         cerr << "Failed to open the file." << endl;
         return 1;
@@ -88,7 +88,7 @@ int main() {
     string dummy;
     getline(file, dummy);
 
-    vector<double> t, a_x, a_y, a_z, a_mag;
+    vector<double> t, a_x, a_y, a_z;
 
     string line;
     while (getline(file, line)) {
@@ -97,11 +97,10 @@ int main() {
         a_x.push_back(stod(parts[1]));
         a_y.push_back(stod(parts[2]));
         a_z.push_back(stod(parts[3]));
-        a_mag.push_back(stod(parts[4]));
     }
     file.close();
     double sampling_time = SamplingTime(t);
-    //write_to_csv(t,a_x,a_y,a_z,"Checking.csv");
+    write_to_csv(t,a_x,a_y,a_z,"Checking.csv");
     vector<double> a_x_new = linear_interpolation(a_x, t, sampling_time);
     vector<double> a_y_new = linear_interpolation(a_y, t, sampling_time);
     vector<double> a_z_new = linear_interpolation(a_z,t,sampling_time);

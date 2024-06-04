@@ -26,7 +26,7 @@ class KalmanFilter{ //We are not using any matrices as the entire operation is j
         Q_k(sigma * sigma){
                 
                 }  
-        void prediction(double jerk){
+        void prediction(double jerk, double dt){
             X_pred = X_prev + jerk*dt; //ill include w_k later
             P_pred = P_prev + Q_k;
         }
@@ -54,7 +54,7 @@ vector<double> Return_Sigma(vector<double> acc_array, vector<double> time_array)
     for(size_t i = 1; i < acc_array.size(); i++){
         sigma = max(sigma, fabs(acc_array[i] - acc_array[i-1]));
     }
-    sigma = sigma / 2;
+    sigma = sigma * 0.75; // read in a book that it should be between 0.5(del(a)) < sigma < del(a)
 
     double acc_error = 0;
     for(size_t i = 0; i < time_array.size(); i++){
@@ -82,12 +82,12 @@ void write_to_csv(const vector<double>& t,const vector<double>& x, const vector<
     cout << "Data written to " << filename << " successfully." << endl;
 }
 
- vector<double> Filtered_Output(vector<double> accn, vector<double> jerk, vector<double> time){
+ vector<double> Filtered_Output(vector<double> accn, vector<double> time){
     vector<double> errors = Return_Sigma(accn,time);
     KalmanFilter KF(accn[0], (time[1] - time[0]), errors[1], errors[0]);
     vector<double> Filtered_Accn = {accn[0]};
-    for(size_t i = 1; i < accn.size(); i++){
-        KF.prediction(jerk[i]);
+    for(size_t i = 1; i < accn.size() - 1; i++){
+        KF.prediction(((accn[i+1] - accn[i-1])/(time[i+1]-time[i-1])) , time[i] - time[i-1]);
         KF.update();
         Filtered_Accn.push_back(KF.X_prev);
     }
@@ -97,47 +97,61 @@ void write_to_csv(const vector<double>& t,const vector<double>& x, const vector<
 
 
 int main(){
-    ifstream file("Jerk_data.csv");
+    ifstream file("May_26_09-16.csv");
     if (!file.is_open()) {
         cerr << "Failed to open the file." << endl;
         return 1;
     }
     string dummy;
     getline(file, dummy);
-    vector<double> t, j_x, j_y, j_z;
+    vector<double> t, a_x, a_y, a_z, a_mag;
     string line;
     while (getline(file, line)) {
         vector<string> parts = split(line, ',');
         t.push_back(stod(parts[0]));
-        j_x.push_back(stod(parts[1]));
-        j_y.push_back(stod(parts[2]));
-        j_z.push_back(stod(parts[3]));
-    }
-    file.close();
-
-    ifstream file2("New_Accn_Data.csv");
-    if (!file2.is_open()) {
-        cerr << "Failed to open New_Accn_data.csv." << endl;
-        return 1;
-    }
-    string dummy2;
-    getline(file2, dummy2);
-    vector<double>  a_x, a_y, a_z;
-    string line2;
-    while (getline(file2, line2)) {
-        vector<string> parts = split(line2, ',');
         a_x.push_back(stod(parts[1]));
         a_y.push_back(stod(parts[2]));
         a_z.push_back(stod(parts[3]));
     }
-    file2.close();
+    file.close();
      
-    vector<double> filtered_a_x = Filtered_Output(a_x, j_x, t);
-    vector<double> filtered_a_y = Filtered_Output(a_y, j_y, t);
-    vector<double> filtered_a_z = Filtered_Output(a_z, j_z, t);
+    vector<double> filtered_a_x = Filtered_Output(a_x, t);
+    vector<double> filtered_a_y = Filtered_Output(a_y, t);
+    vector<double> filtered_a_z = Filtered_Output(a_z, t);
+    t.pop_back();
 
-    // cout << filtered_a_x.size() << endl;
-    // cout << a_x.size() << endl;
-    // cout << t.size() << endl;
+
+    // size_t N = filtered_a_x.size();
+    // for(size_t i = 0; i < N; i ++){
+    //     filtered_a_x[i] = filtered_a_x[i]*(static_cast<int>(N));
+    //     filtered_a_y[i] = filtered_a_y[i]*(static_cast<int>(N));
+    //     filtered_a_z[i] = filtered_a_z[i]*(static_cast<int>(N));
+    // }
+
+    filtered_a_x.erase(filtered_a_x.begin());
+    filtered_a_y.erase(filtered_a_y.begin());
+    filtered_a_z.erase(filtered_a_z.begin());
+    t.erase(t.begin());
+
+    cout << filtered_a_x.size() << endl;
+    cout << a_x.size() << endl;
+    cout << t.size() << endl;
     write_to_csv(t, filtered_a_x, filtered_a_y, filtered_a_z, "Filtered_Accn.csv");
 }
+
+    // ifstream file2("New_Accn_Data.csv");
+    // if (!file2.is_open()) {
+    //     cerr << "Failed to open New_Accn_data.csv." << endl;
+    //     return 1;
+    // }
+    // string dummy2;
+    // getline(file2, dummy2);
+    // vector<double>  a_x, a_y, a_z;
+    // string line2;
+    // while (getline(file2, line2)) {
+    //     vector<string> parts = split(line2, ',');
+    //     a_x.push_back(stod(parts[1]));
+    //     a_y.push_back(stod(parts[2]));
+    //     a_z.push_back(stod(parts[3]));
+    // }
+    // file2.close();
