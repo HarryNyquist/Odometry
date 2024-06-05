@@ -8,27 +8,51 @@ df = pd.read_csv("New_Accn_Data.csv",header = None,skiprows = 1)
 acc_data = df.to_numpy()
 t_new, a_x_new, a_y_new, a_z_new= acc_data.T
 
+a_x_new = a_x_new - a_x_new[0]
+a_y_new = a_y_new - a_y_new[0]
+a_z_new = a_z_new - a_z_new[0]
+
+
 A_x = np.fft.fft(a_x_new)
 A_y = np.fft.fft(a_y_new)
-A_z = np.fft.fft(a_z_new)
+A_z = np.fft.fft(a_z_new) 
 
 index_array = np.fft.fftfreq(len(A_x), t_new[1] - t_new[0])
-print(index_array[0])
+divide = np.where(index_array == 0, t_new[2] - t_new[1], index_array)
 squared = np.where(index_array == 0, t_new[2] - t_new[1], index_array ** 2)
-print(squared[0])
-np.savetxt("FFT_Freq.csv", squared, fmt = "%f", delimiter = ",")
 
-X = A_x/squared * (-1)
-Y = A_y/squared * (-1)
-Z = A_z/squared * (-1)
+V_x = (A_x/divide) * (1j)
+V_y = (A_y/divide) * (1j)
+V_z = (A_z/divide) * (1j)
+
+v_x = np.fft.ifft(V_x)
+v_y = np.fft.ifft(V_y)
+v_z = np.fft.ifft(V_z)
+
+v_x = v_x - v_x[0]
+v_y = v_y - v_y[0]
+v_z = v_z - v_z[0]
+
+
+vel_data = np.column_stack((t_new, v_x, v_y, v_z))
+np.savetxt("Velocity.csv", vel_data, fmt = "%f", delimiter = ",")
+
+V_x = np.fft.fft(v_x)
+V_y = np.fft.fft(v_y)
+V_z = np.fft.fft(v_z)
+
+
+X = (V_x/divide) * (1j)
+Y = (V_y/divide) * (1j)
+Z = (V_z/divide) * (1j)
 
 x = np.fft.ifft(X)
 y = np.fft.ifft(Y)
 z = np.fft.ifft(Z)
 
-# x = x - x[0]
-# y = y - y[0]
-# z = z - z[0] 
+x = x - x[0]
+y = y - y[0]
+z = z - z[0] 
 # N = len(x)
 
 # x = x*N*N
@@ -61,10 +85,10 @@ plt.clf()
 
 
 
-phone = sphere(pos = vector(0,0,0), radius = 5, color = color.yellow, make_trail = True)
-for i in range(len(t_new)):
-    rate(500)
-    phone.pos = vector(z[i],x[i],y[i])
+# phone = sphere(pos = vector(0,0,0), radius = 5, color = color.yellow, make_trail = True)
+# for i in range(len(t_new)):
+#     rate(500)
+#     phone.pos = vector(z[i],x[i],y[i])
 
 
 #displacement_data = np.column_stack((t_new,x,y,z))
