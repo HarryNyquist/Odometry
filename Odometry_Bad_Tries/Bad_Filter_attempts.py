@@ -12,7 +12,8 @@ df = pd.read_csv("To_send.csv", header = None, skiprows = 1)
 acc_data = df.to_numpy()
 t, a_x, a_y, a_z, a_mag = acc_data.T 
 
-smoothed_using_SMA = simple_moving_average(a_y, 100)
+kernel_size = 100
+smoothed_using_SMA = simple_moving_average(a_y, kernel_size)
 plt.plot(t,smoothed_using_SMA, color = 'blue')
 plt.scatter(t,a_y, color = 'red')
 plt.grid(True)
