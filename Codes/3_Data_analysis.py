@@ -53,6 +53,14 @@ z = np.fft.ifft(Z)
 x = x - x[0]
 y = y - y[0]
 z = z - z[0] 
+
+N = len(x)
+x = x * N 
+y = y * N 
+z = z * N
+# x = x*(N*N/(4*np.pi*np.pi))
+# y = y*(N*N/(4*np.pi*np.pi))
+# z = z*(N*N/(4*np.pi*np.pi))
 # N = len(x)
 
 # x = x*N*N

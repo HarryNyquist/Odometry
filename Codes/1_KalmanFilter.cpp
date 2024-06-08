@@ -21,7 +21,7 @@ class KalmanFilter{ //We are not using any matrices as the entire operation is j
         KalmanFilter(double X_0, double sampling_time, double acc_error, double sigma) :
         X_prev(X_0), 
         P_prev(sigma * sigma),
-        R(acc_error * acc_error),
+        R(acc_error),
         dt(sampling_time),
         Q_k(sigma * sigma){
                 
@@ -49,22 +49,13 @@ vector<string> split(const string& s, char delimiter) {
     return tokens;
 }
 
-vector<double> Return_Sigma(vector<double> acc_array, vector<double> time_array){
+double Return_Sigma(vector<double> acc_array){
     double sigma = 0;
     for(size_t i = 1; i < acc_array.size(); i++){
         sigma = max(sigma, fabs(acc_array[i] - acc_array[i-1]));
     }
     sigma = sigma * 0.75; // read in a book that it should be between 0.5(del(a)) < sigma < del(a)
-
-    double acc_error = 0;
-    for(size_t i = 0; i < time_array.size(); i++){
-        if(time_array[i] >= 5){
-            break;
-        }
-        
-        acc_error = max(acc_error, fabs(acc_array[i]));
-    }
-    return {sigma, acc_error};
+    return sigma;
 }
 
 void write_to_csv(const vector<double>& t,const vector<double>& x, const vector<double>& y, const vector<double>& z, const string& filename) {
@@ -83,8 +74,8 @@ void write_to_csv(const vector<double>& t,const vector<double>& x, const vector<
 }
 
  vector<double> Filtered_Output(vector<double> accn, vector<double> time){
-    vector<double> errors = Return_Sigma(accn,time);
-    KalmanFilter KF(accn[0], (time[1] - time[0]), errors[1], errors[0]);
+    double error = Return_Sigma(accn);
+    KalmanFilter KF(accn[0], (time[1] - time[0]), 0.01, error);
     vector<double> Filtered_Accn = {accn[0]};
     for(size_t i = 1; i < accn.size() - 1; i++){
         KF.prediction(((accn[i+1] - accn[i-1])/(time[i+1]-time[i-1])) , time[i] - time[i-1]);
