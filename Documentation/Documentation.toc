@@ -4,3 +4,10 @@
 \contentsline {chapter}{\numberline {4}Interpolation}{5}{chapter.4}%
 \contentsline {chapter}{\numberline {5}Kalman Filtering}{7}{chapter.5}%
 \contentsline {chapter}{\numberline {6}Instruction to use}{11}{chapter.6}%
+\contentsline {chapter}{\numberline {7}Details about the codes}{12}{chapter.7}%
+\contentsline {section}{\numberline {7.1}Kalman Filtering}{12}{section.7.1}%
+\contentsline {section}{\numberline {7.2}Interpolation}{13}{section.7.2}%
+\contentsline {section}{\numberline {7.3}Finding position from acceleration}{13}{section.7.3}%
+\contentsline {section}{\numberline {7.4}Why not other filters?}{13}{section.7.4}%
+\contentsline {subsection}{\numberline {7.4.1}Simple Moving Average}{14}{subsection.7.4.1}%
+\contentsline {subsection}{\numberline {7.4.2}Low Pass Filter}{14}{subsection.7.4.2}%
