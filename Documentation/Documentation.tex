@@ -42,7 +42,7 @@
 \newpage
 \Large
 
-\chapter{Introduction}
+\chapter{Introduction} \label{Chapter-1}
 This project attemps to collect accelerometer data from a sensor, sampled at some time, and give an output about the displacement of the object. An advancement of using a Kalman Filter to filter out any noise from the sensor has also been undertaken.\\ 
 This document describes the implementation of the aforementioned. \\
 \bigskip
@@ -76,7 +76,7 @@ Thus, to obtain velocity, the Fourier transform of acceleration can be divided b
 \newpage
 \chapter{Using the Fourier Transform on the discrete data set}
 While the above reasoning is correct, it only applies in the continuous domain. However, the sensor provides discrete data, so it cannot be applied directly. One way to go around this problem is to simply sample the signal in frequency domain at a suitably chosen sampling frequency $f_s$(the details of choosing such $f_s$ would be discussed later). \\
-Sampling the continuous Fourier Transform at some sampling frequency yields the Discrete Fourier Transform(DFT). Hence, the job becomes much easier: An FFT can be applied onto the data-set, divided by the sampling frequency(and a suitable scaling factor), and it's IFFT computed to find the integral. But an N-point DFT requires that all points be sampled regularly(i.e, the sampling interval for every measurement must be equal), which is not so(as stated in the "Collection of data" section earlier).
+Sampling the continuous Fourier Transform at some sampling frequency yields the Discrete Fourier Transform(DFT). Hence, the job becomes much easier: An FFT can be applied onto the data-set, divided by the sampling frequency(and a suitable scaling factor), and it's IFFT computed to find the integral. But an N-point DFT requires that all points be sampled regularly(i.e, the sampling interval for every measurement must be equal), which is not so(as stated in the \autoref{Chapter-1}).
 
 \chapter{Interpolation}
 (The details about filtering the data before interpolation would be clarified later.)\\
@@ -84,14 +84,14 @@ Let the values of a function $y = f(x)$ be given at certain points, say $\Bigl(x
 \bigskip
 The simplest way of interpolation would be using linear interpolation(which is what is implemented in the code), wherein an equation of the line connecting the points $\Bigl(x_i,f\left(x_i\right)\Bigr)$ and $\Bigl(x_{i+1}, f(x_{i+1})\Bigr)$ is found, and the value of $f(x_i + \epsilon)$ is found from that so-formed line equation.\\
 \bigskip
-The code for linear interpolation can be found \href{https://github.com/HarryNyquist/Odometry/blob/main/Codes/2_DataFunctions.cpp}{here}, under the function named \verb|linear_interpolation|.\\
+The code for linear interpolation can be found \href{https://github.com/HarryNyquist/Odometry/blob/main/Codes/2_DataFunctions.cpp}{\underline{\textbf{here}}}, under the function named \verb|linear_interpolation|.\\
 \bigskip
 The appropriate sampling time $T_s$ is found by taking the minimum time interval of recording of the accelerations (from the Phyphox app as talked about before) and halved. That is,
 \begin{align}
     T_s = \frac{\Delta T_{min}}{2}
 \end{align}
 (It is halved in order to conform to the Nyquist sampling rate, $f_s \geq 2f_{max}$). \\
-The code for finding the appropriate sampling rate is found \href{https://github.com/HarryNyquist/Odometry/blob/main/Codes/2_DataFunctions.cpp}{here}, under the function named \verb|SamplingTime| \\
+The code for finding the appropriate sampling rate is found \href{https://github.com/HarryNyquist/Odometry/blob/main/Codes/2_DataFunctions.cpp}{\underline{\textbf{here}}}, under the function named \verb|SamplingTime| \\
 \bigskip
 Let us say that the first time instant at which the acceleration started getting recorded is from some time $t$(generally, $t \sim 0.02s$), but the interpolation unnecessarily also fills value between 0 and $t$. Hence, to remove the same, the index of the element in the \verb|t| array(it stores the time instants of recording) that is nearest and greater than $t$ is found using the \verb|nearest_index| function, and the array is trimmed using the \verb|trim_time_array| function. \\
 \bigskip
@@ -101,7 +101,7 @@ Now to address the elephant in the room - filtering. Filtering is the process by
 \bigskip
 Now before talking about why Kalman filtering is probably the best way to go, one needs to try other filters to see why they would fail. Let's take the good old Simple Moving Average filter, for example. \\
 The reason for why that would not work is that a moving average filter would fail in the presence of rapid extreme variations (which is almost always the case), and averaging them would be a bad idea as they might not account for these extremities properly.
-But what if we \textit{did} implement it? Well, it has been, \href{https://github.com/HarryNyquist/Odometry/blob/main/Odomtery_Bad_Tries/Bad_Filter_attempts.py}{here}, under the function name \verb|simple_moving_average|, after choosing an appropriate \\ \verb|kernel_size|\footnote{if \texttt{kernel\textunderscore size} were to take smaller values, say 10, then it would absolutely follow the output, but offers no amount of filtering whatsoever.It would be equivalent to simply just using the unfiltered output.}. The filtering yielded the following:
+But what if we \textit{did} implement it? Well, it has been, \href{https://github.com/HarryNyquist/Odometry/blob/main/Odometry_Bad_Tries/Bad_Filter_attempts.py}{\underline{\textbf{here}}}, under the function name \verb|simple_moving_average|, after choosing an appropriate \\ \verb|kernel_size|\footnote{if \texttt{kernel\textunderscore size} were to take smaller values, say 10, then it would absolutely follow the output, but offers no amount of filtering whatsoever.It would be equivalent to simply just using the unfiltered output.}. The filtering yielded the following:
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.8\textwidth]{figs/Filtered_using_SMA_downsampled.png}
@@ -111,7 +111,7 @@ But what if we \textit{did} implement it? Well, it has been, \href{https://githu
 The black scatter dots represent the actual values, and the blue line represents the filtered values. As it can be seen, the extreme values have not been taken care of properly.  \\
 \bigskip
 Another option would be to use a Low Pass Filter(LPF). Since we are using a program, a brickwall LPF can be applied onto the signal. (We would have to use a Hamming window function because the brickwall LPF is an IIR filter). This again would be an issue as the cutoff frequency to be set would vary from dataset to dataset. Thus, a cutoff frequency that works for one case might not work for the other. But again, what if it \textit{were} to be implemented?\\
-It has been, \href{https://github.com/HarryNyquist/Odometry/blob/main/Odomtery_Bad_Tries/Bad_Filter_attempts.py}{here}, under the function name \verb|Brickwall_LPF| \footnote{Simply taking the FFT, removing all frequencies above the cutoff, and then taking the IFFT would not always work(in fact, it might not even work for the majority of cases) as the IFFT would return complex values due to lack of conjugate symmetry.}. The filtering yielded the following:
+It has been, \href{https://github.com/HarryNyquist/Odometry/blob/main/Odometry_Bad_Tries/Bad_Filter_attempts.py}{\underline{\textbf{here}}}, under the function name \verb|Brickwall_LPF| \footnote{Simply taking the FFT, removing all frequencies above the cutoff, and then taking the IFFT would not always work(in fact, it might not even work for the majority of cases) as the IFFT would return complex values due to lack of conjugate symmetry.}. The filtering yielded the following:
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.8\textwidth]{figs/Filtered_using_brickwall_LPF.png}
@@ -121,10 +121,10 @@ It would be hard to see it here, but there exists a sort of lag, wherein the fil
 \bigskip
 The common denominator seen is the issue that a particular choice of a filter parameter(for eg., \verb|kernel_size| for the SMA or \verb|cutoff_freq| for the LPF), while working well for one set of data, might not work for another set of data for the same filter parameter used again. Thus, there exists a need for an algorithm that can smartly find out the required filter parameters based on the need. This void is filled by the Kalman Filter(KF).\\ 
 \bigskip
-Without going too much into the details, the Kalman Filter \footnote{Do note that there are variants of the KF used in modern times, like the EKF, unscented KF etc., which are more accurate but harder to implement.The KF implemented in the code is the original simple KF proposed by Rudolf E. Kálmán} is a recursive algorithm that essentially is given an approximate model that an object would follow, and sensor data about the aforementioned object. The Kalman Filter essentially calculated the Kalman Gain at each recursive step, which in essence, tries to figure out whether to assign a greater weight to the prediction of the model or sensor data based on previous sensor data and model predictions. \\ \bigskip
-The code for the Kalman Filter has been implemented \href{https://github.com/HarryNyquist/Odometry/blob/main/Codes/1_KalmanFilter.cpp}{here}. A \\ \verb|KalmanFilter| class has been created, with all necessary \\ parameters \footnote{Generally, the parameters for the KF \textit{should} be matrices, but the code has been written as using 1\texttimes 1 matrix, essentially numbers, to make implementation and computation simpler.} required for its operation. Do note that the parameter \verb|R| in the \verb|KalmanFilter| class is initialized to \verb|acc_error|, which is specific to the sensor and can be found beforehand. It has been found to be 0.01 for the sensor on the phone. \newpage
+Without going too much into the details, the Kalman Filter \footnote{Do note that there are variants of the KF used in modern times, like the EKF, unscented KF etc., which are more accurate but harder to implement.The KF implemented in the code is the original simple KF proposed by Rudolf E. Kálmán} is a recursive algorithm that essentially is given an approximate\\ model \footnote{The approximate model used here assumes that the body undergoes motion with constant jerk, which is correct if taken piecewise. This approximation is surprisingly correct for quite a large portion of the dataset. It only is incorrect at very less number of points, which can be seen upon plotting the acceleration data itself.} that an object would follow, and sensor data about the aforementioned object. The Kalman Filter essentially calculated the Kalman Gain at each recursive step, which in essence, tries to figure out whether to assign a greater weight to the prediction of the model or sensor data based on previous sensor data and model predictions. \\ \bigskip
+The code for the Kalman Filter has been implemented \href{https://github.com/HarryNyquist/Odometry/blob/main/Codes/1_KalmanFilter.cpp}{\underline{\textbf{here}}}. A \\ \verb|KalmanFilter| class has been created, with all necessary \\ parameters \footnote{Generally, the parameters for the KF \textit{should} be matrices, but the code has been written as using 1\texttimes 1 matrix, essentially numbers, to make implementation and computation simpler.} required for its operation. Do note that the parameter \verb|R| in the \verb|KalmanFilter| class is initialized to \verb|acc_error|, which is specific to the sensor and can be found beforehand. It has been found to be 0.01 for the sensor on the phone. \newpage
 \chapter{Instruction to use}
-The most important question as of yet, how is it supposed to be used? The \href{https://github.com/HarryNyquist/Odometry}{GitHub repository}, under the directory \verb|Codes|, contain the C++ and Python programs to be run. In \href{https://github.com/HarryNyquist/Odometry/blob/main/Codes/1_KalmanFilter.cpp}{this C++ file}, in the following line
+The most important question as of yet, how is it supposed to be used? The \href{https://github.com/HarryNyquist/Odometry}{\underline{\textbf{GitHub repository}}}, under the directory \verb|Codes|, contain the C++ and Python programs to be run. In \href{https://github.com/HarryNyquist/Odometry/blob/main/Codes/1_KalmanFilter.cpp}{\underline{\textbf{this C++ file}}}, in the following line
 \begin{lstlisting}{language=C++}
     ifstream file("May_26_09-16.csv");
 \end{lstlisting}
